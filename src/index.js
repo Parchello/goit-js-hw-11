@@ -3,7 +3,6 @@ import Notiflix from 'notiflix';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import { serviceImage, perPage } from './servise';
 
-console.log(perPage);
 const elements = {
   container: document.querySelector('.gallery'),
   form: document.querySelector('.search-form-js'),
@@ -29,9 +28,8 @@ function downloadMore() {
       elements.container.insertAdjacentHTML('beforeend', createMurcup(data));
       if (data.totalHits / perPage <= page) {
         elements.btnLoad.classList.add('load-more-hidden');
-        Notiflix.Notify.info('Sorry bro, its last page ):');
+        Notiflix.Notify.info('Sorry, its last page ):');
       }
-      console.log(data);
     })
     .catch(err => console.log(err));
 }
