@@ -43,7 +43,7 @@ function onSubmit(evt) {
       if (response.total === 0) {
         Notiflix.Notify.failure('Sorry, there are no images. Please try again');
       }
-      console.log(response);
+
       const el = response.hits;
       return createMurcup(response);
     })
