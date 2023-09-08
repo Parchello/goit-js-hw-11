@@ -1,47 +1,96 @@
-import axios from 'axios';
+import SimpleLightbox from 'simplelightbox';
 import Notiflix from 'notiflix';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+import { serviceImage, perPage } from './servise';
 
-const axios = require('axios');
-const query = document.querySelector('.js-search-form');
-const loadBtn = document.querySelector('.js-load-more');
-const queryCard = document.querySelector('.gallery');
+console.log(perPage);
+const elements = {
+  container: document.querySelector('.gallery'),
+  form: document.querySelector('.search-form-js'),
+  btnLoad: document.querySelector('.js-load-more'),
+};
+const gallery = document.querySelector('.gallery');
+let page = 1;
+let textInput = '';
 
-const BASE_URL = 'https://pixabay.com/api';
-
-const params = new URLSearchParams({
-  key: '39303751-f85d01d5ec057fa92b3d6d344',
-  q: 'dog',
-  image_type: 'photo',
-  orientation: 'horizontal',
+const lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
 });
 
-async function fetchPictures() {
-  try {
-    const resp = await axios.get(`${BASE_URL}?${params}`);
-    console.log(resp);
-  } catch (_) {
-    Notiflix.Notify.warning('Invalid');
-  }
+elements.form.addEventListener('submit', onSubmit);
+elements.btnLoad.addEventListener('click', downloadMore);
+
+function downloadMore() {
+  page += 1;
+  serviceImage(page, textInput)
+    .then(data => {
+      console.log(data.totalHits);
+      elements.container.insertAdjacentHTML('beforeend', createMurcup(data));
+      if (data.totalHits / perPage <= page) {
+        elements.btnLoad.classList.add('load-more-hidden');
+        Notiflix.Notify.info('Sorry bro, its last page ):');
+      }
+      console.log(data);
+    })
+    .catch(err => console.log(err));
 }
 
-fetchPictures();
+function onSubmit(evt) {
+  evt.preventDefault();
+  elements.container.innerHTML = '';
+  textInput = evt.currentTarget.elements.searchQuery.value;
+  serviceImage(1, textInput)
+    .then(response => {
+      if (response.total === 0) {
+        Notiflix.Notify.failure('Sorry, there are no images. Please try again');
+      }
+      console.log(response);
+      const el = response.hits;
+      return createMurcup(response);
+    })
+    .catch(err => console.log(err));
+}
 
-function createMarckup() {
-  queryCard.innerHTML = `<div class="photo-card">
-  <img src="" alt="" loading="lazy" />
-  <div class="info">
-    <p class="info-item">
-      <b>Likes</b>
-    </p>
-    <p class="info-item">
-      <b>Views</b>
-    </p>
-    <p class="info-item">
-      <b>Comments</b>
-    </p>
-    <p class="info-item">
-      <b>Downloads</b>
-    </p>
-  </div>
-</div>`;
+function createMurcup(array) {
+  const resp = array.hits
+    .map(data => {
+      const {
+        webformatURL,
+        largeImageURL,
+        tags,
+        likes,
+        comments,
+        views,
+        downloads,
+      } = data;
+      return `<div class="photo-card">
+        <a href="${largeImageURL}">
+      <img src="${webformatURL}" alt="${tags}" loading="lazy" width="300" height="200" />
+      <div class="info">
+        <p class="info-item">
+          <b>Likes: </b><span class="numbers">${likes}</span>
+        </p>
+        <p class="info-item">
+          <b>Views: </b><span class="numbers">${views}</span>
+        </p>
+        <p class="info-item">
+          <b>Comments: </b><span class="numbers">${comments}</span>
+        </p>
+        <p class="info-item">
+          <b>Downloads: </b><span class="numbers">${downloads}</span>
+        </p>
+      </div>
+      </a>
+    </div>
+    `;
+    })
+    .join('');
+
+  elements.container.insertAdjacentHTML('beforeend', resp);
+  lightbox.refresh();
+  if (array.totalHits > perPage) {
+    Notiflix.Notify.success('Wiiiiii, 500 images, Wiiiiiiiiiii');
+    elements.btnLoad.classList.replace('load-more-hidden', 'load-more');
+  }
 }
