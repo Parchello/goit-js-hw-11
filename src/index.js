@@ -24,7 +24,6 @@ function downloadMore() {
   page += 1;
   serviceImage(page, textInput)
     .then(data => {
-      console.log(data.totalHits);
       elements.container.insertAdjacentHTML('beforeend', createMurcup(data));
       if (data.totalHits / perPage <= page) {
         elements.btnLoad.classList.add('load-more-hidden');
